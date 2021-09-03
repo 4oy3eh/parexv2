@@ -9,7 +9,6 @@ public class Form {
     private String sen_name;
     private String sen_document;
     private String sen_account;
-
     private String rec_name;
     private String rec_document;
     private String rec_country;
@@ -18,34 +17,24 @@ public class Form {
     private String rec_bank;
 
 
+    private String trade_currecy;
     private String trade_date;
     private BigDecimal trade_sum;
     private String trade_details;
 
-    @Override
-    public String toString() {
-        return "Form{" +
-                "id=" + id +
-                ", sen_name='" + sen_name + '\'' +
-                ", sen_document='" + sen_document + '\'' +
-                ", sen_account='" + sen_account + '\'' +
-                ", rec_name='" + rec_name + '\'' +
-                ", rec_document='" + rec_document + '\'' +
-                ", rec_country='" + rec_country + '\'' +
-                ", rec_account='" + rec_account + '\'' +
-                ", rec_IBAN='" + rec_IBAN + '\'' +
-                ", rec_bank='" + rec_bank + '\'' +
-                ", trade_date='" + trade_date + '\'' +
-                ", trade_sum=" + trade_sum +
-                ", trade_details='" + trade_details + '\'' +
-                '}';
-    }
+
 
     public UUID getId() {
         return id;
     }
 
+    public String getTrade_currecy() {
+        return trade_currecy;
+    }
 
+    public void setTrade_currecy(String trade_currecy) {
+        this.trade_currecy = trade_currecy;
+    }
 
     public void setSen_name(String sen_name) {
         this.sen_name = sen_name;

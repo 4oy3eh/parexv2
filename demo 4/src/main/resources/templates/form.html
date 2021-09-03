@@ -3,32 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <title>Form</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
 </head>
 
 <body>
 <div align="center">
 
     <form action="#" th:action="@{form}" method="post" th:object="${form}">
-        <label>Full name:</label>
-        <input type="text" th:field="*{sen_name}"/><br/>
-
-        <label>Remitter document </label> <input type="text" th:field="*{sen_document}" name="name"></br>
-        Account number <input type="text" th:field="*{sen_account}" name="name"></br>
-        Beneficiary person <input type="text" th:field="*{rec_name}" name="name"></br>
-        Beneficiary document<input type="text" th:field="*{rec_document}" name="Doc"></br>
-        <label>Beneficiary country</label><select th:field="*{rec_country}">
-        <option th:each="i : ${countries}" th:value="${i}" th:text="${i}"></option>
-    </select> </br>
-        Beneficiary account <input type="text" th:field="*{rec_account}" name="Account"></br>
-        Beneficiary IBAN <input type="text" th:field="*{rec_IBAN}" name="IBAN"></br>
-        Beneficiary Bank name <input type="text" th:field="*{rec_bank}" name="IBAN"></br>
-
-        Trade Date <input type="date" th:field="*{trade_date}" name="Date"></br>
-        Trade Sum <input type="number" th:field="*{trade_sum}" name="Sum"></br>
-        Trade Details <textarea rows="25" cols="25" th:field="*{trade_details}" name="Details"/></br>
 
 
+        <div class="container">
+            <div class="row justify-content-md-center">
+                <div class="col">
+                    <label>Remitter name:</label>
+                </div>
+                <div class="col">
+                    <input type="text" th:field="*{sen_name}"/>
+                </div>
+
+            </div>
+            <div class="row justify-content-md-center">
+                <div class="col">
+                    <label>Remitter document:</label>
+                </div>
+                <div class="col">
+                    <input type="text" th:field="*{sen_document}" name="name">
+                </div>
+            </div>
+            <div class="row justify-content-md-center">
+                <div class="col">
+                    <label>Account number:</label>
+                </div>
+                <div class="col">
+                    <input type="text" th:field="*{sen_account}" name="name">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>Beneficiary name:</label>
+                </div>
+                <div class="col">
+                    <input type="text" th:field="*{rec_name}" name="name">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>Beneficiary country:</label>
+                </div>
+                <div class="col">
+                    <select th:field="*{rec_country}">
+                        <option th:each="i : ${countries}" th:value="${i}" th:text="${i}"></option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>Beneficiary document:</label>
+                </div>
+                <div class="col">
+                    <input type="text" th:field="*{rec_document}" name="Doc">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>Beneficiary account:</label>
+                </div>
+                <div class="col">
+                    <input type="text" th:field="*{rec_account}" name="Account">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>Beneficiary IBAN</label>
+                </div>
+                <div class="col">
+                    <input type="text" th:field="*{rec_IBAN}" name="IBAN">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>Beneficiary Bank name</label>
+                </div>
+                <div class="col">
+                    <input type="text" th:field="*{rec_bank}" name="Bank_name">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>Trade Date</label>
+                </div>
+                <div class="col">
+                    <input type="date" th:field="*{trade_date}" name="Date">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <label>Trade Sum</label>
+                </div>
+                <div class="col">
+                    <input type="number" th:field="*{trade_sum}" name="Sum">
+                    <select th:field="*{trade_currecy}">
+                        <option th:each="i : ${currency}" th:value="${i}" th:text="${i}"></option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="row">
+                <div class="col">
+                    <label>Trade Details</label>
+                </div>
+                <div class="col">
+                    <textarea rows="10" cols="25" th:field="*{trade_details}" name="Details"/>
+                </div>
+            </div>
+        </div>
         <button type="submit">create PDF</button>
     </form>
 </div>

@@ -1,5 +1,8 @@
 package com.example.demo;
 
+import com.github.sarxos.xchange.ExchangeCache;
+import com.github.sarxos.xchange.ExchangeException;
+import com.github.sarxos.xchange.ExchangeRate;
 import com.itextpdf.forms.PdfAcroForm;
 import com.itextpdf.forms.fields.PdfFormField;
 import com.itextpdf.io.source.ByteArrayOutputStream;
@@ -72,17 +75,26 @@ public class FormController {
         model.addAttribute("form", form);
 
         List<String> countries = Arrays.asList(new String[]{
-                "Latvia",
                 "Europe",
                 "Non-EU"
         });
+
+        List<String> currency = Arrays.asList(new String[]{
+                "AUD",
+                "GBP",
+                "EUR",
+                "USD"
+        });
+
+
         model.addAttribute("countries", countries);
+        model.addAttribute("currency",currency);
         return "form";
     }
 
 
     @PostMapping(value = "/form")
-    public void submitForm(@ModelAttribute("form") Form form) {
+    public String submitForm(@ModelAttribute("form") Form form) {
         System.out.println(form);
         System.out.println(form.getSen_name());
         System.out.println(form.getRec_country());
@@ -97,11 +109,13 @@ public class FormController {
         file.getParentFile().mkdirs();
 
         try {
-            manipulatePdf(DEST, form.getId(), form.getSen_name(), form.getSen_document(), form.getSen_account(), form.getRec_name(), form.getRec_document(), form.getRec_country(), form.getRec_account(), form.getRec_IBAN(), form.getRec_bank(), form.getTrade_date(), form.getTrade_sum(), form.getTrade_details());
+            manipulatePdf(DEST, form.getId(), form.getSen_name(), form.getSen_document(), form.getSen_account(), form.getRec_name(), form.getRec_document(), form.getRec_country(), form.getRec_account(), form.getRec_IBAN(), form.getRec_bank(), form.getTrade_date(), form.getTrade_sum(), form.getTrade_details(), form.getTrade_currecy());
+
         } catch (Exception e) {
             e.printStackTrace();
+            return "error";
         }
-
+        return "success";
     }
 
     public int transfer(String text) {
@@ -171,11 +185,11 @@ public class FormController {
         else return formatter.format( System.currentTimeMillis());
     }
 
-    public void manipulatePdf(String dest, UUID id, String sen_name, String sen_document, String sen_account, String rec_name, String rec_document, String rec_country, String rec_account, String rec_IBAN, String rec_bank, String trade_date, BigDecimal trade_sum, String trade_details) throws Exception {
+    public void manipulatePdf(String dest, UUID id, String sen_name, String sen_document, String sen_account, String rec_name, String rec_document, String rec_country, String rec_account, String rec_IBAN, String rec_bank, String trade_date, BigDecimal trade_sum, String trade_details, String trade_currency) throws Exception {
 
         // Partially flattened form's byte array with content, which should placed beneath the other content.
         byte[] tempForm = createPartiallyFlattenedForm();
-        createResultantPdf(dest, tempForm, id, sen_name, sen_document, sen_account, rec_name, rec_document, rec_country, rec_account, rec_IBAN, rec_bank, trade_date, trade_sum, trade_details);
+        createResultantPdf(dest, tempForm, id, sen_name, sen_document, sen_account, rec_name, rec_document, rec_country, rec_account, rec_IBAN, rec_bank, trade_date, trade_sum, trade_details, trade_currency);
     }
 
     public byte[] createPartiallyFlattenedForm() throws IOException {
@@ -193,10 +207,27 @@ public class FormController {
     }
 
 
-    public void createResultantPdf(String dest, byte[] src, UUID id, String sen_name, String sen_document, String sen_account, String rec_name, String rec_document, String rec_country, String rec_account, String rec_IBAN, String rec_bank, String trade_date, BigDecimal trade_sum, String trade_details) throws IOException {
+    public void createResultantPdf(String dest, byte[] src, UUID id, String sen_name, String sen_document, String sen_account, String rec_name, String rec_document, String rec_country, String rec_account, String rec_IBAN, String rec_bank, String trade_date, BigDecimal trade_sum, String trade_details, String trade_currency) throws IOException {
         PdfDocument pdfDoc = new PdfDocument(new PdfReader(new RandomAccessSourceFactory().createSource(src),
                 new ReaderProperties()), new PdfWriter(dest));
         PdfAcroForm form = PdfAcroForm.getAcroForm(pdfDoc, true);
+
+        ExchangeCache.setParameter("openexchangerates.org.apikey", "8900dd7938ad485a8ecdb39422449a88");
+
+        // define base currency
+        ExchangeCache cache = new ExchangeCache("USD");
+
+        // get the CAD to USD exchange rate
+        ExchangeRate rate = null;
+        try {
+            rate = cache.getRate(trade_currency);
+        } catch (ExchangeException e) {
+            e.printStackTrace();
+        }
+
+        // convert
+        BigDecimal converted = rate.convert(trade_sum);
+
 
         Map<String, PdfFormField> fields = form.getFormFields();
 
@@ -213,11 +244,11 @@ public class FormController {
         fields.get("fill_11").setValue(rec_IBAN);//rec bank id
         fields.get("fill_12").setValue(trade_sum.toString());//deal sum
         fields.get("fill_13").setValue(commision(rec_country,rec_bank));//deal commission
-        fields.get("fill_14").setValue(convert(trade_sum.longValue()));//deal ammount words
-        fields.get("fill_15").setValue("");//deal payment type
-        fields.get("fill_16").setValue("text");//deal exchange rate
+        fields.get("fill_14").setValue(convert(trade_sum.longValue()) + " " + toLongCurrency(trade_currency));//deal ammount words
+        fields.get("fill_15").setValue(paymentType(rec_country,rec_bank));//deal payment type
+        fields.get("fill_16").setValue(converted.toString() + " USD");//deal exchange rate
         fields.get("fill_17").setValue(notWeekend());//deal value date
-        fields.get("fill_18").setValue("???");//deal code of external payment
+        fields.get("fill_18").setValue("");//deal code of external payment ??
 //        // All fields will be flattened, because no fields have been explicitly included
 //
 //
@@ -232,13 +263,24 @@ public class FormController {
     }
 
     public String commision(String country, String bank){
-        if(country!="Europe")
-            return "the worst rate";
-        else if(bank=="Citadele")
-            return "best rate!";
-        else
+        if(country.equals("Europe"))
             return "worse rate";
+        else if(bank.equals("Citadele"))
+            return "best rate!";
+        else return "the worst rate";
+
     }
+
+    public String paymentType(String country, String bank){
+        if(country.equals("Europe"))
+            return "inside the EU";
+        else if(bank.equals("Citadele"))
+            return "inside the bank!";
+        else return "outside the EU";
+
+    }
+
+
 
 
     public static String convert(long number) {
@@ -331,6 +373,13 @@ public class FormController {
         return numNames[number] + " hundred" + soFar;
     }
 
+    public String toLongCurrency(String shortCurrency){
+        if (shortCurrency.equals("AUD")) return "Australian Dollar";
+        else if(shortCurrency.equals("GBP")) return "British Pound Sterling";
+        else if(shortCurrency.equals("EUR")) return "Euro";
+        else if(shortCurrency.equals("USD")) return "United States Dollar";
+        else return "something went wrong";
+    }
 
 
 }
